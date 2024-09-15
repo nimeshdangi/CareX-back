@@ -21,5 +21,5 @@ app.use("/login", loginRoutes);
 app.use("/test", testRoutes);
 
 app.listen(port, () => {
-    console.log(`Application is running on: http://localhost:${port}`);
+    console.log(`Application is on process: http://localhost:${port}`);
 })
