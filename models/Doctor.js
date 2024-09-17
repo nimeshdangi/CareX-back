@@ -35,6 +35,12 @@ const Doctor = (sequelize) => {
         password: {
             type: DataTypes.STRING,
             allowNull: false
+        },
+        status: {
+            type: DataTypes.ENUM("Approved", "Not Approved"),
+            // values: [],
+            allowNull: false,
+            defaultValue: "Not Approved"
         }
     }, {
         tableName: 'doctor',
