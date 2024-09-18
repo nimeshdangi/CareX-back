@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {Doctor} = require('../models/index');
+const {Admin, Doctor, Patient} = require('../models/index');
 const multer = require('multer');
 const path = require("path");
 
@@ -27,6 +27,7 @@ const handleMulterError = (err, req, res, next) => {
 
 router.post('/registration', upload.single('documents'), handleMulterError, async (req, res) => {
     const {name, email, phone_no, registrationNumber, specification, qualification, password} = req.body;
+    // console.log(req.body);
     const document = req.file;
 
     // console.log("File:", req.file);
