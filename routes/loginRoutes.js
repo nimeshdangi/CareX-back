@@ -4,8 +4,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const {Admin, Doctor, Patient} = require('../models/index');
 
-const JWT_SECRET = 'awesome_secret'; // Replace with your own secret key
-const JWT_EXPIRATION = '2h'; // Token expiration time
+// const JWT_SECRET = 'awesome_secret'; // Replace with your own secret key
+// const JWT_EXPIRATION = '2h'; // Token expiration time
 
 router.post('/', async (req, res) => {
     const { email, password } = req.body;
@@ -20,8 +20,8 @@ router.post('/', async (req, res) => {
         // Generate JWT
         const token = jwt.sign(
             { id: user.id, role: 'admin' },
-            JWT_SECRET,
-            { expiresIn: JWT_EXPIRATION }
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRATION }
         );
 
         return res.json({
