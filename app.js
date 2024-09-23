@@ -1,12 +1,17 @@
+require('dotenv').config();
 const express = require("express");
 const app = express();
 const cors = require("cors");
 const port = 5000;
+const path = require("path");
 const {sequelize} = require("./models/index");
 const testRoutes = require("./routes/testRoutes");
 const loginRoutes = require("./routes/loginRoutes");
 const doctorRoutes = require("./routes/doctorRoutes");
 const patientRoutes = require("./routes/patientRoutes");
+
+// Serve the 'uploads' folder as static
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // CORS configuration
 app.use(cors({
@@ -33,5 +38,6 @@ app.use("/doctor", doctorRoutes);
 app.use("/patient", patientRoutes);
 
 app.listen(port, () => {
+    console.log("JWT SECRET:", process.env.JWT_SECRET);
     console.log(`Application is running on: http://localhost:${port}`);
 })
