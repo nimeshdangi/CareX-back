@@ -39,20 +39,27 @@ router.post('/', async (req, res) => {
         const doctorData = user.get({plain: true});
         const {password: _, ...doctorWithoutPassword} = doctorData;
 
-        // Generate JWT
-        const token = jwt.sign(
-            { id: user.id, role: 'doctor' },
-            JWT_SECRET,
-            { expiresIn: JWT_EXPIRATION }
-        );
+        if (user.status === 'Approved') {     
+            // Generate JWT
+            const token = jwt.sign(
+                { id: user.id, role: 'doctor' },
+                process.env.JWT_SECRET,
+                { expiresIn: process.env.JWT_EXPIRATION }
+            );
 
-        return res.json({
-            success: "true",
-            message: "Doctor Login Successful",
-            token,
-            role: 'doctor',
-            user: doctorWithoutPassword
-        });
+            return res.json({
+                success: "true",
+                message: "Doctor Login Successful",
+                token,
+                role: 'doctor',
+                user: doctorWithoutPassword
+            });
+        } else {
+            return res.status(403).json({
+                success: false,
+                message: "Your account is not approved yet. Please wait until approval."
+            });
+        }
     }
 
     // Check in Patient table
@@ -64,8 +71,8 @@ router.post('/', async (req, res) => {
         // Generate JWT
         const token = jwt.sign(
             { id: user.id, role: 'patient' },
-            JWT_SECRET,
-            { expiresIn: JWT_EXPIRATION }
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRATION }
         );
 
         return res.json({
