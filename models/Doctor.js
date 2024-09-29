@@ -47,11 +47,13 @@ const Doctor = (sequelize) => {
         hooks: {
             beforeCreate: async (doctor) => {
                 if (doctor.password) {
+                    // console.log("Hashing password:", doctor.password);
                     doctor.password = await bcrypt.hash(doctor.password, 10);
+                    // console.log("Hashed password:", doctor.password);
                 }
             },
             beforeUpdate: async (doctor) => {
-                if (doctor.password) {
+                if (doctor.changed("password")) {
                     doctor.password = await bcrypt.hash(doctor.password, 10);
                 }
             }
