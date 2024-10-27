@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const {Admin, Doctor, Patient, Appointment} = require('../models/index');
+const {Admin, Doctor, Patient, Appointment, Review} = require('../models/index');
 const multer = require('multer');
 const path = require("path");
 const jwt = require("jsonwebtoken");
-const { where, Op } = require('sequelize');
+const { where, Op, Sequelize } = require('sequelize');
 
 // Set up storage for multer
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/doctors/documents/'); // Directory to save the uploaded files
+        cb(null, 'uploads/doctors/'); // Directory to save the uploaded files
     },
     filename: function (req, file, cb) {
         cb(null, Date.now() + path.extname(file.originalname)); // File naming convention
@@ -18,6 +18,15 @@ const storage = multer.diskStorage({
 
 // Initialize upload
 const upload = multer({ storage: storage });
+
+const asyncUpload = (req, res) => {
+  return new Promise((resolve, reject) => {
+    upload.single('image')(req, res, (err) => {
+      if (err) return reject(err);
+      resolve();
+    });
+  });
+};
 
 // Middleware to handle errors from multer
 const handleMulterError = (err, req, res, next) => {
@@ -222,7 +231,7 @@ router.put("/approve/:id", checkIfAdmin, async (req, res) => {
 });
 
 router.post("/appointment", checkIfDoctor, async (req, res) => {
-    // console.log(req.body);
+    console.log(req.body);
     const { doctor_id, start_date_time, end_date_time } = req.body;
 
     // console.log(req.body);
@@ -323,7 +332,7 @@ router.get("/profile", checkIfDoctor, async (req, res) => {
         });
         res.status(200).json({
             success: true,
-            message: "List of all doctors",
+            message: "Details of the doctor retrieved successfully",
             data: doctor
         });
     } catch (err) {
@@ -333,6 +342,92 @@ router.get("/profile", checkIfDoctor, async (req, res) => {
         });
     }
 });
+
+router.put("/profile", checkIfDoctor, async (req, res) => {
+    const {doctor_id} = req.body;
+
+    if(!doctor_id) {
+        return res.status(401).json({
+            success: false,
+            message: "You need to login"
+        });
+    }
+
+    try {
+        await asyncUpload(req, res);
+
+        const updateData = {
+            name: req.body.name,
+            email: req.body.email,
+            phone_no: req.body.phone_no,
+            registrationNumber: req.body.registrationNumber,
+            specification: req.body.specification,
+            qualification: req.body.qualification,
+        };
+
+        if(req.file) {
+            updateData.image = req.file.path;
+        }
+
+        const updatedDoctor = await Doctor.update(updateData, {
+            where: {
+                id: doctor_id
+            }
+        });
+
+        if(!updatedDoctor) {
+            return res.status(404).json({
+                success: false,
+                message: "Doctor not found"
+            }); 
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Doctor profile updated successfully",
+            data: updatedDoctor
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
+});
+
+router.get("/review", checkIfDoctor, async (req, res) => {
+    const {doctor_id} = req.body;
+    try {
+        const reviews = await Review.findAll({
+            where: {
+                doctor_id: doctor_id
+            },
+            include: [
+                {
+                    model: Patient,
+                    attributes: ['name', 'image']
+                }
+            ]
+        });
+        const averageRating = await Review.findOne({
+            where: {
+                doctor_id: doctor_id
+            },
+            attributes: [[Sequelize.fn('AVG', Sequelize.col('rating')), 'averageRating']],
+        })
+        res.status(200).json({
+            success: true,
+            message: "List of reviews",
+            data: reviews,
+            averageRating: averageRating
+        });
+    } catch (err) {
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+    }
+})
 
 router.get("/:id", async (req, res) => {
     const { id } = req.params;
